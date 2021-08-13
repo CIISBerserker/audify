@@ -38,38 +38,44 @@ Napi::Value OpusDecoderWrap::decode(const Napi::CallbackInfo &info) {
   Napi::Buffer buf = info[0].As<Napi::Buffer<uint8_t>>();
   int frameSize = info[1].As<Napi::Number>();
 
-  opus_int16 *outBuf = new opus_int16[frameSize * _channels];
+  uint8_t *outBuf = new uint8_t[frameSize * _channels * sizeof(opus_int16)];
   int samples = 0;
 
   // Decode the given frame
-  samples = opus_decode(_opusDecoder, (const unsigned char *)buf.Data(),
-                        (opus_int32)buf.Length(), outBuf, frameSize, 0);
+  samples =
+      opus_decode(_opusDecoder, (const unsigned char *)buf.Data(),
+                  (opus_int32)buf.Length(), (opus_int16 *)outBuf, frameSize, 0);
+
   if (samples < 0) {
     throw Napi::Error::New(info.Env(), getErrorMsg(samples));
   }
 
   // Create Napi Buffer from output buffer
-  return Napi::Buffer<uint8_t>::Copy(info.Env(), (const uint8_t *)outBuf,
-                                     samples * _channels * sizeof(opus_int16));
+  return Napi::Buffer<uint8_t>::New(
+      info.Env(), (const uint8_t *)outBuf,
+      samples * _channels * sizeof(opus_int16),
+      [](Napi::Env, uint8_t *buf) { delete[] buf; });
 }
 
 Napi::Value OpusDecoderWrap::decodeFloat(const Napi::CallbackInfo &info) {
   Napi::Buffer buf = info[0].As<Napi::Buffer<uint8_t>>();
   int frameSize = info[1].As<Napi::Number>();
 
-  float *outBuf = new float[frameSize * _channels];
+  uint8_t *outBuf = new uint8_t[frameSize * _channels * sizeof(float)];
   int samples = 0;
 
   // Decode the given frame
   samples = opus_decode_float(_opusDecoder, (const unsigned char *)buf.Data(),
-                              (opus_int32)buf.Length(), outBuf, frameSize, 0);
+                              (opus_int32)buf.Length(), (float *)outBuf,
+                              frameSize, 0);
   if (samples < 0) {
     throw Napi::Error::New(info.Env(), getErrorMsg(samples));
   }
 
   // Create Napi Buffer from output buffer
-  return Napi::Buffer<uint8_t>::Copy(info.Env(), (const uint8_t *)outBuf,
-                                     samples * _channels * sizeof(float));
+  return Napi::Buffer<uint8_t>::New(
+      info.Env(), (const uint8_t *)outBuf, samples * _channels * sizeof(float),
+      [](Napi::Env, uint8_t *buf) { delete[] buf; });
 }
 
 std::string OpusDecoderWrap::getErrorMsg(int error) {
