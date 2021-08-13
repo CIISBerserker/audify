@@ -52,8 +52,7 @@ Napi::Value OpusDecoderWrap::decode(const Napi::CallbackInfo &info) {
 
   // Create Napi Buffer from output buffer
   return Napi::Buffer<uint8_t>::New(
-      info.Env(), (const uint8_t *)outBuf,
-      samples * _channels * sizeof(opus_int16),
+      info.Env(), (uint8_t *)outBuf, samples * _channels * sizeof(opus_int16),
       [](Napi::Env, uint8_t *buf) { delete[] buf; });
 }
 
@@ -74,7 +73,7 @@ Napi::Value OpusDecoderWrap::decodeFloat(const Napi::CallbackInfo &info) {
 
   // Create Napi Buffer from output buffer
   return Napi::Buffer<uint8_t>::New(
-      info.Env(), (const uint8_t *)outBuf, samples * _channels * sizeof(float),
+      info.Env(), (uint8_t *)outBuf, samples * _channels * sizeof(float),
       [](Napi::Env, uint8_t *buf) { delete[] buf; });
 }
 
